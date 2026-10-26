@@ -1,0 +1,29 @@
+{
+  "n_steps": 500,
+  "n_bins": 10,
+  "n_fit_series": 200,
+  "n_episodes": 2000,
+  "n_runs": 5,
+  "n_test_series": 100,
+  "n_val_series": 50,
+  "agent": {
+    "alpha": 0.1,
+    "gamma": 0.95,
+    "epsilon_start": 1.0,
+    "epsilon_min": 0.05,
+    "epsilon_decay": 0.998,
+    "alpha_decay": 0.998,
+    "alpha_min": 0.01
+  },
+  "convergence": {
+    "policy_window": 200,
+    "policy_agreement": 0.95,
+    "ma_window": 100,
+    "ma_tol_frac": 0.1,
+    "val_every": 50,
+    "val_tol_abs": 0.01,
+    "val_tol_rel": 0.05,
+    "val_window": 200
+  },
+  "random_base_seed": 0
+}
