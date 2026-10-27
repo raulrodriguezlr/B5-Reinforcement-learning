@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Informe RL trader</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm 10mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: #0b0b0b;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 8pt;
+    line-height: 1.28;
+  }
+  h1 { font-size: 13pt; margin: 0 0 1mm 0; }
+  .meta { color: #52514e; font-size: 8pt; margin-bottom: 2.5mm; }
+  h2 {
+    font-size: 9.6pt; margin: 2.6mm 0 1mm 0;
+    border-bottom: 0.4pt solid #c3c2b7; padding-bottom: 0.4mm;
+  }
+  p { margin: 0 0 1.4mm 0; text-align: justify; }
+  ul { margin: 0 0 1.4mm 0; padding-left: 4.5mm; }
+  li { margin-bottom: 0.6mm; text-align: justify; }
+  table { border-collapse: collapse; width: 100%; font-size: 7.4pt; margin: 1mm 0 1mm 0; }
+  th, td { padding: 0.55mm 1.2mm; text-align: right; white-space: nowrap; }
+  th { color: #52514e; font-weight: 600; border-bottom: 0.6pt solid #898781; }
+  td:nth-child(1), td:nth-child(2), th:nth-child(1), th:nth-child(2) { text-align: left; }
+  tr.sep td { border-top: 0.4pt solid #c3c2b7; }
+  tr.agent td { font-weight: 600; }
+  .caption { color: #52514e; font-size: 7.4pt; margin: 0.6mm 0 1.6mm 0; text-align: justify; }
+  figure { margin: 0; }
+  figure img { width: 84%; display: block; margin: 0 auto; }
+  .page-break { break-before: page; }
+  .muted { color: #52514e; }
+</style>
+</head>
+<body>
+
+<h1>Agentes tabulares de aprendizaje por refuerzo para invertir en un activo: Q-learning y Sarsa</h1>
+<div class="meta">Aprendizaje por Refuerzo, MIAX-14 · Taller trader · Grupo: Alonso, Piettro y Raúl · Código y resultados: github.com/raulrodriguezlr/B5-Reinforcement-learning</div>
+
+<h2>1. Planteamiento y decisiones de diseño</h2>
+<ul>
+  <li><b>Entorno.</b> Se usa <code>SimpleTradingEnv</code> del enunciado sin cambios: acciones vender, mantener y comprar; recompensa igual al retorno del paso si se tiene el activo, menos 0,1&nbsp;% por operación; capital inicial 1000. Cada episodio recorre 494 pasos de una serie de 500 precios.</li>
+  <li><b>Estado discreto.</b> La tendencia observada es continua y, medida sobre series reales de cada generador, vive en torno a ±0,06 (±0,35 en tendencia + ciclo): el recorte a ±1 del entorno nunca actúa y diez tramos uniformes en [−1, 1] dejarían casi todos los estados en un único tramo. Por eso se discretiza en <b>10 tramos por cuantiles</b>, ajustados para cada generador con 200 series propias (nunca de test). El estado es (tramo, posición) y la tabla Q tiene forma 10×2×3.</li>
+  <li><b>Entrenamiento.</b> Cada episodio usa una <b>serie nueva</b> del mismo generador (3000 episodios). Política ε-greedy con ε decreciente de 1 a 0,05 y α decreciente (×0,998 por episodio, mínimo 0,01): con α constante la política greedy seguía cambiando en casi todos los episodios por valores Q casi empatados.</li>
+  <li><b>Datos y ajuste.</b> Semillas disjuntas para entrenamiento, validación (50 series) y test (100 series). Hiperparámetros elegidos solo en validación (mediana del log-retorno de la política greedy) con la rejilla α ∈ {0,05; 0,2}, γ ∈ {0; 0,9; 0,99}, decaimiento de ε ∈ {0,995; 0,999} y 3 semillas. Gana γ = 0,9 en tendencia + ciclo y γ = 0,99 en reversión; en browniano y regímenes casi todo empata en “no operar”.</li>
+  <li><b>Evaluación.</b> 5 semillas por algoritmo; política greedy final sobre las mismas 100 series de test que los baselines (aleatorio, buy &amp; hold). Medianas por serie, porque el generador 1 da balances muy asimétricos. Convergencia: primer episodio desde el que el rendimiento en validación queda en tolerancia del valor final durante al menos 200 episodios.</li>
+</ul>
+
+<h2>2. Resultados en test</h2>
+<table>
+  <thead>
+    <tr><th>Generador</th><th>Método</th><th>Balance (mediana)</th><th>Log-ret. medio ± std runs</th><th>Exceso vs B&amp;H (pp)</th><th>Sharpe</th><th>Drawdown (%)</th><th>Operac.</th><th>% en mercado</th><th>Conv. val (episodio)</th></tr>
+  </thead>
+  <tbody>
+    <tr class="agent"><td>Tendencia + ciclo</td><td>Q-learning</td><td>473 712</td><td>6,30 ± 0,21</td><td>33 331</td><td>0,188</td><td>65,4</td><td>47</td><td>65,1</td><td>n/c (0/5)</td></tr>
+    <tr class="agent"><td></td><td>Sarsa</td><td>463 976</td><td>6,30 ± 0,38</td><td>33 757</td><td>0,188</td><td>66,1</td><td>50</td><td>64,4</td><td>2549 (1/5)</td></tr>
+    <tr><td></td><td>Buy &amp; hold</td><td>33 458</td><td>3,61</td><td>0</td><td>0,120</td><td>89,2</td><td>1</td><td>100,0</td><td>n/c</td></tr>
+    <tr><td></td><td>Aleatorio</td><td>4 568</td><td>1,60</td><td>−2 613</td><td>0,078</td><td>78,3</td><td>166</td><td>49,0</td><td>n/c</td></tr>
+    <tr class="sep agent"><td>Browniano</td><td>Q-learning</td><td>1 000</td><td>−0,02 ± 0,04</td><td>−0,3</td><td>0,000</td><td>0,0</td><td>0</td><td>0,0</td><td>2099 (2/5)</td></tr>
+    <tr class="agent"><td></td><td>Sarsa</td><td>1 000</td><td>−0,03 ± 0,06</td><td>−0,3</td><td>0,000</td><td>0,0</td><td>0</td><td>0,0</td><td>2232 (3/5)</td></tr>
+    <tr><td></td><td>Buy &amp; hold</td><td>989</td><td>−0,01</td><td>0</td><td>0,009</td><td>37,7</td><td>1</td><td>100,0</td><td>n/c</td></tr>
+    <tr><td></td><td>Aleatorio</td><td>809</td><td>−0,17</td><td>−15,9</td><td>−0,024</td><td>32,2</td><td>166</td><td>49,0</td><td>n/c</td></tr>
+    <tr class="sep agent"><td>Reversión a la media</td><td>Q-learning</td><td>1 215</td><td>0,18 ± 0,02</td><td>21,7</td><td>0,038</td><td>18,2</td><td>63</td><td>34,8</td><td>2749 (1/5)</td></tr>
+    <tr class="agent"><td></td><td>Sarsa</td><td>1 203</td><td>0,17 ± 0,02</td><td>19,9</td><td>0,041</td><td>14,9</td><td>44</td><td>20,6</td><td>2049 (1/5)</td></tr>
+    <tr><td></td><td>Buy &amp; hold</td><td>994</td><td>−0,00</td><td>0</td><td>0,010</td><td>25,5</td><td>1</td><td>100,0</td><td>n/c</td></tr>
+    <tr><td></td><td>Aleatorio</td><td>872</td><td>−0,14</td><td>−13,9</td><td>−0,013</td><td>30,8</td><td>166</td><td>49,0</td><td>n/c</td></tr>
+    <tr class="sep agent"><td>Regímenes</td><td>Q-learning</td><td>1 000</td><td>0,03 ± 0,03</td><td>17,2</td><td>0,000</td><td>12,9</td><td>33</td><td>30,5</td><td>n/c (0/5)</td></tr>
+    <tr class="agent"><td></td><td>Sarsa</td><td>1 000</td><td>0,00 ± 0,00</td><td>12,6</td><td>0,000</td><td>0,0</td><td>0</td><td>0,0</td><td>2019 (5/5)</td></tr>
+    <tr><td></td><td>Buy &amp; hold</td><td>874</td><td>−0,16</td><td>0</td><td>−0,007</td><td>43,4</td><td>1</td><td>100,0</td><td>n/c</td></tr>
+    <tr><td></td><td>Aleatorio</td><td>767</td><td>−0,26</td><td>−8,7</td><td>−0,033</td><td>35,1</td><td>166</td><td>49,0</td><td>n/c</td></tr>
+  </tbody>
+</table>
+<div class="caption">Tabla 1. 100 series de test por generador (agentes: 5 semillas). Salvo el log-retorno (media ± desviación entre semillas), todo son medianas por serie. Conv. val: episodio medio de las semillas que convergen (convergidas/total); n/c, sin convergencia en 3000 episodios. Entrenar 3000 episodios cuesta 28 a 36 s en ambos algoritmos.</div>
+
+<figure><img src="figures/fig_politica.png" alt="Política aprendida por tramo de tendencia y posición"></figure>
+<div class="caption">Figura 1. Política greedy final: fracción de las 5 semillas cuya acción deja la cartera dentro del mercado, por tramo de tendencia (0 la más baja) y posición actual. Gris: ninguna semilla entra.</div>
+
+<h2>3. Análisis por generador: ¿es la estrategia esperada?</h2>
+<ul>
+  <li><b>Tendencia + ciclo: seguimiento de tendencia, esperado.</b> El agente entra con tendencia alta y sale con tendencia negativa (figuras 1 y 3). Multiplica el log-retorno de buy &amp; hold (6,3 frente a 3,6) con menos drawdown (65&nbsp;% frente a 89&nbsp;%). El resultado es tan bueno porque el ciclo del generador es determinista: <code>sin(t)</code> sobre la misma rejilla de tiempo tiene la misma fase en todas las series (periodo de unos 63 pasos), y la tendencia de 6 pasos revela en qué tramo del ciclo se está. Es un patrón aprendible en este simulador, no una propiedad de un mercado real.</li>
+  <li><b>Browniano: no operar, esperado.</b> Con incrementos independientes la tendencia no contiene información sobre el retorno siguiente, así que ninguna política puede batir en esperanza a buy &amp; hold, y la comisión hace que operar sea negativo. Ambos agentes aprenden a quedarse en efectivo: igualan a buy &amp; hold en mediana (−0,3 pp) con drawdown nulo. Responde a la pregunta abierta de clase: con precios aleatorios lo óptimo es “da igual” y, con costes, no operar.</li>
+  <li><b>Reversión a la media: estrategia contraria, esperada.</b> Compra solo en el tramo de tendencia más negativo y mantiene hasta que la tendencia se vuelve positiva. La asimetría entre entrar (solo en el tramo 0) y salir (desde el tramo 4) es una banda de histéresis que ahorra comisiones. Supera a buy &amp; hold en unos 20 pp. Sarsa es más selectivo (21&nbsp;% del tiempo en mercado frente a 35&nbsp;%) con menor drawdown.</li>
+  <li><b>Regímenes: seguimiento de tendencia solo parcial.</b> Lo esperado es estar dentro en régimen alcista y fuera en bajista. Q-learning entra rara vez pero, una vez dentro, mantiene salvo tendencia extrema; Sarsa no opera nunca. Ambos superan a buy &amp; hold (que pierde un 16&nbsp;% en mediana porque el régimen bajista tiene más caída y volatilidad), pero sobre todo por evitar el mercado: una ventana de 6 pasos distingue mal el régimen oculto en un ruido del 1 al 2,5&nbsp;% por paso.</li>
+</ul>
+
+<figure><img src="figures/fig_aprendizaje.png" alt="Curvas de aprendizaje en validación"></figure>
+<div class="caption">Figura 2. Mediana del log-retorno en validación de la política greedy cada 50 episodios: media de 5 semillas y banda entre mínimo y máximo.</div>
+
+<h2>4. Q-learning frente a Sarsa y convergencia</h2>
+<p>El rendimiento final es similar en los cuatro generadores y el coste por episodio también (unos 10 ms). La diferencia está en el estilo: <b>Sarsa es más conservador</b> (menos tiempo en mercado en reversión y ninguna operación en regímenes), como predice la teoría: al ser <i>on-policy</i> evalúa la política ε-greedy que incluye exploración, igual que en el ejemplo del acantilado, mientras que Q-learning evalúa la greedy. En tendencia + ciclo Sarsa alcanza la meseta en validación en unos 300 episodios y Q-learning hacia el 1000 (figura 2). Los criterios estrictos de convergencia rara vez se cumplen en 3000 episodios (columna Conv. val): el rendimiento se estabiliza, pero la política oscila en celdas con valores Q casi empatados, que son justo los estados sin ventaja explotable. γ &gt; 0 gana donde hay estructura, porque valora mantener la posición frente a pagar comisión en cada cambio; γ = 0 nunca es mejor salvo en empates.</p>
+
+<figure><img src="figures/fig_episodio.png" alt="Precio y balance en una serie de test por generador" style="width:76%"></figure>
+<div class="caption">Figura 3. Una serie de test por generador. Arriba, precio con sombreado donde Q-learning tiene el activo; abajo, balance en escala logarítmica de cada método (Q-learning y Sarsa coinciden en 1000 cuando no operan).</div>
+
+<h2>5. Análisis crítico y limitaciones</h2>
+<ul>
+  <li>El estado (tendencia de 6 pasos, posición) no es markoviano: en regímenes el régimen está oculto y en reversión no se observa la distancia al nivel de equilibrio. Ampliar el estado (por ejemplo, desviación respecto a una media larga) es la mejora más directa.</li>
+  <li>El generador 1 premia un ciclo de fase fija; en series reales ese patrón no existe, y los resultados no son trasladables a mercado (además habría sesgo de supervivencia y costes distintos).</li>
+  <li>El ajuste usa una sola medición final en validación y 3 semillas: es ruidoso, y en browniano y regímenes la rejilla no discrimina. Con 3000 episodios varias semillas no llegan a estabilizarse.</li>
+  <li>Pendiente como extensión: entrenar mezclando generadores, sensibilidad al número de tramos, Monte Carlo on-policy y una serie real como comprobación.</li>
+</ul>
+
+<h2>6. Conclusiones</h2>
+<p>Con un estado mínimo (tendencia discretizada y posición), Q-learning y Sarsa aprenden en cada mercado la estrategia que su generador hace razonable: seguir la tendencia cuando hay ciclo, operar a la contra cuando hay reversión y no operar cuando no hay información. Superan siempre al agente aleatorio y a buy &amp; hold salvo en el browniano, donde lo empatan con mucho menos riesgo. Las diferencias entre algoritmos son de prudencia más que de rendimiento, y la principal limitación es la información que contiene el estado, no el algoritmo.</p>
+
+</body>
+</html>
