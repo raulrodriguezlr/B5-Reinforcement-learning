@@ -57,8 +57,9 @@ def _policy_table(algo: str, run: int, Q: np.ndarray, edges: np.ndarray) -> pd.D
 
 
 def run_generator(generator: str, cfg: dict, out_dir: Path,
-                  algos: list[str]) -> pd.DataFrame:
-    """Ajusta discretizador, entrena y evalúa cada algoritmo y baselines; guarda ficheros y devuelve el resumen."""
+                  algos: list[str],
+                  agent_overrides: dict[str, dict] | None = None) -> pd.DataFrame:
+    """Ajusta discretizador, entrena y evalúa cada algoritmo y baselines; agent_overrides pisa cfg["agent"] por algoritmo."""
     gen_dir = Path(out_dir) / generator
     gen_dir.mkdir(parents=True, exist_ok=True)
     n_steps = cfg["n_steps"]
@@ -76,12 +77,13 @@ def run_generator(generator: str, cfg: dict, out_dir: Path,
 
     summary = []
     for algo in algos:
+        agent_params = {**cfg["agent"], **(agent_overrides or {}).get(algo, {})}
         frames, policies = [], []
         conv_pol, conv_ma, conv_time, walls = [], [], [], []
         conv_val, conv_val_time, val_times = [], [], []
         for run in range(cfg["n_runs"]):
             res = train(algo, generator, disc, cfg["n_episodes"], run, n_steps,
-                        val_series=val_series, **cfg["agent"], **cfg["convergence"])
+                        val_series=val_series, **agent_params, **cfg["convergence"])
             val_final = (f"{res.val_median_log_return[-1]:.4f}"
                          if len(res.val_median_log_return) > 0 else "n/a")
             print(f"[{generator}] {algo} run {run}: wall {res.wall_time:.1f}s, "
@@ -122,6 +124,8 @@ def run_generator(generator: str, cfg: dict, out_dir: Path,
         pd.concat(policies, ignore_index=True).to_csv(gen_dir / f"policy_{algo}.csv", index=False)
 
         row = _metric_row(generator, algo, metrics)
+        for k in ("alpha", "gamma", "epsilon_decay"):
+            row[k] = agent_params[k]
         row["conv_episode_policy_mean"], row["conv_episode_policy_std"] = _mean_std(conv_pol)
         row["conv_episode_ma_mean"], row["conv_episode_ma_std"] = _mean_std(conv_ma)
         row["conv_time_policy_mean"], row["conv_time_policy_std"] = _mean_std(conv_time)

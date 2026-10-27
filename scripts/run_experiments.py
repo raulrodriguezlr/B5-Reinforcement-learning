@@ -1,5 +1,6 @@
 """Lanza los experimentos para los generadores y algoritmos elegidos."""
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -29,6 +30,8 @@ def main() -> None:
     p.add_argument("--runs", type=_positive_int, default=None)
     p.add_argument("--test-series", type=_positive_int, default=None)
     p.add_argument("--val-series", type=_positive_int, default=None)
+    p.add_argument("--params", type=Path, default=None,
+                   help="best_params.json de tune.py: {generator: {algo: params}}")
     p.add_argument("--out", type=Path, default=ROOT / "results")
     args = p.parse_args()
 
@@ -42,8 +45,14 @@ def main() -> None:
     if args.val_series is not None:
         cfg["n_val_series"] = args.val_series
 
+    overrides = {}
+    if args.params is not None:
+        with open(args.params, encoding="utf-8") as f:
+            overrides = json.load(f)
+
     args.out.mkdir(parents=True, exist_ok=True)
-    tables = [run_generator(g, cfg, args.out, args.algos) for g in args.generators]
+    tables = [run_generator(g, cfg, args.out, args.algos, overrides.get(g))
+              for g in args.generators]
     summary = pd.concat(tables, ignore_index=True)
     summary.to_csv(args.out / "summary.csv", index=False)
 
