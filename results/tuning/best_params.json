@@ -1,0 +1,50 @@
+{
+  "tendencia_ciclo": {
+    "qlearning": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.995,
+      "gamma": 0.9
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.9
+    }
+  },
+  "browniano": {
+    "qlearning": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0
+    }
+  },
+  "reversion_media": {
+    "qlearning": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.99
+    },
+    "sarsa": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.999,
+      "gamma": 0.99
+    }
+  },
+  "regimenes": {
+    "qlearning": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.999,
+      "gamma": 0.99
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0
+    }
+  }
+}
