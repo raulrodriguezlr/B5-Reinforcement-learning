@@ -2,10 +2,11 @@
 import copy
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
-from rl_trader.experiments import load_config, run_generator
+from rl_trader.experiments import add_ma_convergence, load_config, run_generator
 
 CFG = {
     "n_steps": 100,
@@ -59,3 +60,19 @@ def test_load_config_default():
     root = Path(__file__).resolve().parents[1]
     cfg = load_config(root / "config" / "default.json")
     assert cfg["n_steps"] == 500 and cfg["n_val_series"] >= 1
+
+
+def test_add_ma_convergence_desde_npz(tmp_path):
+    # Recompensa constante: converge en window-1 y el tiempo sale de cumulative_time
+    gen = tmp_path / "browniano"
+    gen.mkdir()
+    for run in range(2):
+        np.savez(gen / f"train_qlearning_run{run}.npz", rewards=np.ones(50),
+                 cumulative_time=np.linspace(0.1, 5.0, 50))
+    summary = pd.DataFrame({"generator": ["browniano"] * 2, "method": ["qlearning", "random"]})
+    out = add_ma_convergence(summary, tmp_path, window=10, tol_frac=0.3)
+    q, rnd = out.iloc[0], out.iloc[1]
+    assert q["conv_episode_ma_mean"] == 9
+    assert q["conv_time_ma_mean"] == pytest.approx(np.linspace(0.1, 5.0, 50)[9])
+    assert q["n_not_converged_ma"] == 0
+    assert np.isnan(rnd["conv_episode_ma_mean"])

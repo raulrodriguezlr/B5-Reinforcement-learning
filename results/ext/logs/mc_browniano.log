@@ -1,0 +1,10 @@
+[browniano] mc run 0: wall 122.2s, conv_policy=250, conv_ma=2871, conv_val=1699, val_final=0.0000, val_time=62.0s
+[browniano] mc run 1: wall 123.1s, conv_policy=1008, conv_ma=5098, conv_val=5499, val_final=0.0000, val_time=62.5s
+[browniano] mc run 2: wall 121.7s, conv_policy=984, conv_ma=1867, conv_val=1299, val_final=0.0000, val_time=62.6s
+[browniano] mc run 3: wall 117.2s, conv_policy=1985, conv_ma=2090, conv_val=2049, val_final=0.0000, val_time=60.4s
+[browniano] mc run 4: wall 119.0s, conv_policy=2225, conv_ma=5798, conv_val=2449, val_final=0.0000, val_time=61.1s
+[browniano] mc_off run 0: wall 116.7s, conv_policy=2736, conv_ma=3317, conv_val=5349, val_final=0.0000, val_time=60.5s
+[browniano] mc_off run 1: wall 115.9s, conv_policy=5406, conv_ma=5345, conv_val=5449, val_final=-0.0769, val_time=60.4s
+[browniano] mc_off run 2: wall 115.0s, conv_policy=4745, conv_ma=4861, conv_val=4849, val_final=0.0000, val_time=60.5s
+[browniano] mc_off run 3: wall 116.0s, conv_policy=4437, conv_ma=4513, conv_val=4549, val_final=0.0000, val_time=60.3s
+[browniano] mc_off run 4: wall 115.1s, conv_policy=4824, conv_ma=5881, conv_val=5699, val_final=-0.2146, val_time=60.6s

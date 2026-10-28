@@ -1,0 +1,10 @@
+[browniano] qlearning run 0: wall 192.6s, conv_policy=None, conv_ma=444, conv_val=4149, val_final=0.0000, val_time=99.3s
+[browniano] qlearning run 1: wall 189.0s, conv_policy=None, conv_ma=504, conv_val=None, val_final=-0.0668, val_time=95.9s
+[browniano] qlearning run 2: wall 160.4s, conv_policy=None, conv_ma=501, conv_val=4299, val_final=0.0000, val_time=80.1s
+[browniano] qlearning run 3: wall 157.7s, conv_policy=None, conv_ma=483, conv_val=4249, val_final=0.0000, val_time=78.6s
+[browniano] qlearning run 4: wall 158.1s, conv_policy=None, conv_ma=510, conv_val=None, val_final=-0.0353, val_time=80.2s
+[browniano] sarsa run 0: wall 16.2s, conv_policy=None, conv_ma=371, conv_val=None, val_final=0.0000, val_time=9.4s
+[browniano] sarsa run 1: wall 15.8s, conv_policy=None, conv_ma=295, conv_val=None, val_final=0.0000, val_time=9.4s
+[browniano] sarsa run 2: wall 15.8s, conv_policy=None, conv_ma=129, conv_val=None, val_final=-0.0431, val_time=9.3s
+[browniano] sarsa run 3: wall 15.4s, conv_policy=None, conv_ma=161, conv_val=None, val_final=0.0000, val_time=9.3s
+[browniano] sarsa run 4: wall 15.5s, conv_policy=None, conv_ma=250, conv_val=299, val_final=0.0000, val_time=8.8s

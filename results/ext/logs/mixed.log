@@ -1,0 +1,10 @@
+[mixto] qlearning run 0: wall 177.9s
+[mixto] qlearning run 1: wall 178.7s
+[mixto] qlearning run 2: wall 178.8s
+[mixto] qlearning run 3: wall 172.0s
+[mixto] qlearning run 4: wall 173.3s
+[mixto] sarsa run 0: wall 167.8s
+[mixto] sarsa run 1: wall 166.3s
+[mixto] sarsa run 2: wall 165.8s
+[mixto] sarsa run 3: wall 166.4s
+[mixto] sarsa run 4: wall 165.5s

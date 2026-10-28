@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from rl_trader.env import SimpleTradingEnv
+from rl_trader.env_variants import make_env
 from rl_trader.prices import make_series, split_seeds
 
 INITIAL_BALANCE = 1000.0
@@ -22,9 +23,9 @@ class EpisodeResult:
     balances: np.ndarray   # len pasos + 1, empieza en 1000
 
 
-def run_episode(prices: np.ndarray, policy: Policy) -> EpisodeResult:
+def run_episode(prices: np.ndarray, policy: Policy, cost_rate: float = COMMISSION) -> EpisodeResult:
     """Recorre el entorno con la política hasta terminar."""
-    env = SimpleTradingEnv(prices)
+    env = make_env(prices, cost_rate)
     obs, _ = env.reset()
     actions, positions, rewards = [], [], []
     balances = [env.balance]
@@ -40,9 +41,9 @@ def run_episode(prices: np.ndarray, policy: Policy) -> EpisodeResult:
                          np.array(rewards), np.array(balances))
 
 
-def buy_and_hold_final(prices: np.ndarray) -> float:
+def buy_and_hold_final(prices: np.ndarray, cost_rate: float = COMMISSION) -> float:
     """Balance final de B&H (fórmula del enunciado): compra en prices[5] con comisión."""
-    return INITIAL_BALANCE * (1 - COMMISSION) / prices[5] * prices[-1]
+    return INITIAL_BALANCE * (1 - cost_rate) / prices[5] * prices[-1]
 
 
 def compute_metrics(result: EpisodeResult, bh_final_balance: float) -> dict[str, float]:
@@ -72,13 +73,13 @@ def compute_metrics(result: EpisodeResult, bh_final_balance: float) -> dict[str,
 
 def evaluate_policy(policy_factory: Callable[[int], Policy], generator: str,
                     split: str = "test", n_series: int = 100,
-                    n_steps: int = 500) -> pd.DataFrame:
+                    n_steps: int = 500, cost_rate: float = COMMISSION) -> pd.DataFrame:
     """Una fila por serie (seed + métricas); policy_factory recibe la semilla de la serie."""
     rows = []
     for seed in split_seeds(split, n_series):
         prices = make_series(generator, seed, n_steps)
-        result = run_episode(prices, policy_factory(seed))
-        metrics = compute_metrics(result, buy_and_hold_final(prices))
+        result = run_episode(prices, policy_factory(seed), cost_rate)
+        metrics = compute_metrics(result, buy_and_hold_final(prices, cost_rate))
         rows.append({"seed": seed, **metrics})
     return pd.DataFrame(rows)
 

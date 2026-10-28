@@ -1,0 +1,66 @@
+{
+  "tendencia_ciclo": {
+    "qlearning": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.995,
+      "gamma": 0.9,
+      "epsilon_min": 0.05,
+      "n_episodes": 1250
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.9,
+      "epsilon_min": 0.05,
+      "n_episodes": 500
+    }
+  },
+  "browniano": {
+    "qlearning": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0,
+      "epsilon_min": 0.05,
+      "n_episodes": 4500
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0,
+      "epsilon_min": 0.0,
+      "n_episodes": 500
+    }
+  },
+  "reversion_media": {
+    "qlearning": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.99,
+      "epsilon_min": 0.0,
+      "n_episodes": 1500
+    },
+    "sarsa": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.999,
+      "gamma": 0.99,
+      "epsilon_min": 0.0,
+      "n_episodes": 5000
+    }
+  },
+  "regimenes": {
+    "qlearning": {
+      "alpha": 0.2,
+      "epsilon_decay": 0.999,
+      "gamma": 0.99,
+      "epsilon_min": 0.0,
+      "n_episodes": 6000
+    },
+    "sarsa": {
+      "alpha": 0.05,
+      "epsilon_decay": 0.995,
+      "gamma": 0.0,
+      "epsilon_min": 0.05,
+      "n_episodes": 6000
+    }
+  }
+}

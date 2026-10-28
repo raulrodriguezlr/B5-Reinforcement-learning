@@ -1,0 +1,10 @@
+[regimenes] qlearning run 0: wall 250.6s, conv_policy=5266, conv_ma=2194, conv_val=1599, val_final=0.0000, val_time=128.3s
+[regimenes] qlearning run 1: wall 231.9s, conv_policy=4861, conv_ma=2483, conv_val=2849, val_final=0.0000, val_time=117.4s
+[regimenes] qlearning run 2: wall 210.9s, conv_policy=4498, conv_ma=2266, conv_val=3349, val_final=0.0000, val_time=105.7s
+[regimenes] qlearning run 3: wall 213.1s, conv_policy=5498, conv_ma=2440, conv_val=2449, val_final=0.0000, val_time=106.9s
+[regimenes] qlearning run 4: wall 176.2s, conv_policy=4856, conv_ma=2414, conv_val=2249, val_final=0.0000, val_time=86.3s
+[regimenes] sarsa run 0: wall 141.5s, conv_policy=None, conv_ma=537, conv_val=None, val_final=0.0000, val_time=66.5s
+[regimenes] sarsa run 1: wall 122.1s, conv_policy=None, conv_ma=493, conv_val=5299, val_final=0.0000, val_time=57.8s
+[regimenes] sarsa run 2: wall 135.1s, conv_policy=None, conv_ma=526, conv_val=4899, val_final=0.0000, val_time=64.3s
+[regimenes] sarsa run 3: wall 120.9s, conv_policy=None, conv_ma=481, conv_val=4149, val_final=0.0000, val_time=58.0s
+[regimenes] sarsa run 4: wall 120.2s, conv_policy=None, conv_ma=3836, conv_val=4949, val_final=0.0000, val_time=57.0s

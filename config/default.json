@@ -2,7 +2,7 @@
   "n_steps": 500,
   "n_bins": 10,
   "n_fit_series": 200,
-  "n_episodes": 2000,
+  "n_episodes": 3000,
   "n_runs": 5,
   "n_test_series": 100,
   "n_val_series": 50,
@@ -19,7 +19,7 @@
     "policy_window": 200,
     "policy_agreement": 0.95,
     "ma_window": 100,
-    "ma_tol_frac": 0.1,
+    "ma_tol_frac": 0.3,
     "val_every": 50,
     "val_tol_abs": 0.01,
     "val_tol_rel": 0.05,
@@ -30,6 +30,19 @@
     "n_episodes": 3000,
     "n_runs": 3,
     "val_every": 100
+  },
+  "sweep": {
+    "epsilon_min": [0.0, 0.05, 0.2],
+    "n_episodes": 6000,
+    "n_runs": 5,
+    "val_every": 250,
+    "online_window": 500
+  },
+  "ext": {
+    "bins": [5, 20],
+    "costs": [0.0, 0.005],
+    "mc_episodes": 6000,
+    "mixed_episodes": 8000
   },
   "random_base_seed": 0
 }

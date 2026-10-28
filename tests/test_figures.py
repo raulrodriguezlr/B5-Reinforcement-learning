@@ -34,6 +34,8 @@ def _make_results(root):
             for run in range(N_RUNS):
                 Q = rng.normal(size=(N_BINS, 2, 3))
                 np.savez_compressed(d / f"train_{algo}_run{run}.npz", Q=Q,
+                                    rewards=rng.normal(size=20),
+                                    cumulative_time=np.linspace(0.1, 2.0, 20),
                                     val_episodes=np.arange(0, 20, 5),
                                     val_median_log_return=rng.normal(size=4))
                 for b in range(N_BINS):
@@ -134,7 +136,8 @@ def _summary_row(**kw):
             "excess_return_pct_median": 1.0, "sharpe_median": 0.1,
             "max_drawdown_median": 0.3, "n_trades_median": 10.0,
             "time_in_market_median": 0.5678, "conv_val_mean": 123.6,
-            "n_not_converged_val": 0, "wall_time_mean": 5.0}
+            "n_not_converged_val": 0, "wall_time_mean": 5.0,
+            "n_episodes": 1250, "epsilon_min": 0.05, "conv_episode_ma_mean": 480.2, "n_not_converged_ma": 0, "conv_time_ma_mean": 4.46}
     base.update(kw)
     return pd.Series(base)
 
@@ -147,6 +150,11 @@ def test_fmt_conv_casos():
     assert F._fmt_conv(_summary_row(n_not_converged_val=1, conv_val_mean=np.nan), 5) == "n/c (0/5)"
 
 
+def test_fmt_conv_ma():
+    assert F._fmt_conv(_summary_row(), 5, "ma") == "480 (5/5)"
+    assert F._fmt_conv(_summary_row(n_not_converged_ma=5), 5, "ma") == "n/c (0/5)"
+
+
 def test_build_table_redondeos():
     df = pd.DataFrame([_summary_row(), _summary_row(
         method="buy_and_hold", conv_val_mean=np.nan, n_not_converged_val=np.nan,
@@ -157,6 +165,9 @@ def test_build_table_redondeos():
     assert q["% en mercado"] == "56.8"
     assert q["Drawdown máx. (%)"] == "30.0"
     assert q["Conv. val (episodio)"] == "124 (5/5)"
+    assert q["Conv. MA (episodio)"] == "480 (5/5)"
+    assert q["Conv. MA (s)"] == "4.5"
+    assert q["Episodios / ε_min"] == "1250 / 0.05"
     assert q["Log-ret. medio ± std runs"] == "0.10 ± 0.02"
     assert bh["Conv. val (episodio)"] == "n/c"
     assert bh["Log-ret. medio ± std runs"] == "0.10"
@@ -207,3 +218,22 @@ def test_load_learning_data_sin_npz(results):
         f.unlink()
     with pytest.raises(FileNotFoundError, match="sarsa"):
         F.load_learning_data(results)
+
+
+def _ext_summary(methods, lr=0.5):
+    rows = [{"generator": g, "method": m, "log_return_mean": lr, "log_return_std_runs": 0.1,
+             "n_trades_median": 12.0} for g in F.GENERATORS_ORDER for m in methods]
+    return pd.DataFrame(rows)
+
+
+def test_build_ext_tables_forma():
+    final = _ext_summary(["qlearning", "sarsa", "buy_and_hold"])
+    ext = {"bins5": _ext_summary(["qlearning", "sarsa"]), "bins20": _ext_summary(["qlearning", "sarsa"]),
+           "cost0": _ext_summary(["qlearning", "sarsa"]), "cost0.005": _ext_summary(["qlearning"]),
+           "mc": _ext_summary(["mc", "mc_off"]), "mixed": _ext_summary(["qlearning_mixto", "sarsa_mixto"])}
+    t = F.build_ext_tables(final, ext)
+    assert len(t["algoritmos"]) == 4 and len(t["sensibilidad"]) == 8
+    assert t["algoritmos"].iloc[0]["MC on-policy"] == "0.50 ± 0.10"
+    sarsa = t["sensibilidad"].iloc[1]
+    assert sarsa["comisión 0,5 %"] == "n/c (n/c)"
+    assert t["sensibilidad"].iloc[0]["comisión 0 %"] == "0.50 ± 0.10 (12)"

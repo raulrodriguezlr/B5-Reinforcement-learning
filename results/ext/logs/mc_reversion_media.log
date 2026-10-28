@@ -1,0 +1,10 @@
+[reversion_media] mc run 0: wall 127.1s, conv_policy=330, conv_ma=579, conv_val=349, val_final=0.0343, val_time=61.9s
+[reversion_media] mc run 1: wall 129.8s, conv_policy=306, conv_ma=441, conv_val=449, val_final=0.1548, val_time=63.5s
+[reversion_media] mc run 2: wall 129.5s, conv_policy=322, conv_ma=2144, conv_val=399, val_final=0.0281, val_time=63.3s
+[reversion_media] mc run 3: wall 124.8s, conv_policy=371, conv_ma=5587, conv_val=449, val_final=0.1261, val_time=62.2s
+[reversion_media] mc run 4: wall 127.3s, conv_policy=434, conv_ma=3807, conv_val=549, val_final=0.1063, val_time=62.5s
+[reversion_media] mc_off run 0: wall 128.2s, conv_policy=5647, conv_ma=5081, conv_val=5799, val_final=-0.0185, val_time=63.0s
+[reversion_media] mc_off run 1: wall 143.9s, conv_policy=None, conv_ma=2556, conv_val=None, val_final=0.1478, val_time=61.5s
+[reversion_media] mc_off run 2: wall 128.7s, conv_policy=None, conv_ma=5861, conv_val=None, val_final=-0.1028, val_time=61.8s
+[reversion_media] mc_off run 3: wall 131.5s, conv_policy=None, conv_ma=5819, conv_val=None, val_final=-0.1936, val_time=61.0s
+[reversion_media] mc_off run 4: wall 113.5s, conv_policy=None, conv_ma=860, conv_val=None, val_final=-0.2619, val_time=55.4s

@@ -17,6 +17,7 @@ from rl_trader.agents import ALGORITHMS
 from rl_trader.baselines import buy_and_hold_factory, random_policy_factory
 from rl_trader.discretize import TrendDiscretizer
 from rl_trader.evaluate import run_episode
+from rl_trader.experiments import add_ma_convergence
 from rl_trader.prices import make_series, split_seeds
 
 GENERATORS_ORDER = ["tendencia_ciclo", "browniano", "reversion_media", "regimenes"]
@@ -321,26 +322,35 @@ def fig_test(test: dict) -> Figure:
 
 # ---------------------------------------------------------------- tabla
 
-TABLE_COLUMNS = ["Generador", "Método", "Balance final (mediana)",
+TABLE_COLUMNS = ["Generador", "Método", "Episodios / ε_min", "Balance final (mediana)",
                  "Log-ret. medio ± std runs", "Exceso vs B&H (pp, mediana)", "Sharpe",
                  "Drawdown máx. (%)", "Operaciones", "% en mercado",
-                 "Conv. val (episodio)", "Tiempo entren. (s)"]
+                 "Conv. val (episodio)", "Conv. MA (episodio)", "Conv. MA (s)",
+                 "Tiempo entren. (s)"]
 
 
 def _fmt(v, spec: str) -> str:
     return "n/c" if v is None or pd.isna(v) else format(v, spec)
 
 
-def _fmt_conv(r: pd.Series, n_runs: int) -> str:
-    """Convergencia en validación: 'media (convergidos/total)' o 'n/c (0/total)'."""
-    nnc = r.get("n_not_converged_val")
+def _fmt_conv(r: pd.Series, n_runs: int, key: str = "val") -> str:
+    """Convergencia ('val' o 'ma'): 'media (convergidos/total)' o 'n/c (0/total)'."""
+    nnc = r.get(f"n_not_converged_{key}")
     if nnc is None or pd.isna(nnc):
         return "n/c"
     ok = n_runs - int(nnc)
-    mean = r.get("conv_val_mean")
+    mean = r.get("conv_val_mean" if key == "val" else "conv_episode_ma_mean")
     if ok <= 0 or mean is None or pd.isna(mean):
         return f"n/c (0/{n_runs})"
     return f"{mean:.0f} ({ok}/{n_runs})"
+
+
+def _fmt_budget(r: pd.Series) -> str:
+    """'N / ε_min' de los agentes; n/c en baselines."""
+    n, em = r.get("n_episodes"), r.get("epsilon_min")
+    if n is None or em is None or pd.isna(n) or pd.isna(em):
+        return "n/c"
+    return f"{n:.0f} / {em:g}"
 
 
 def build_table(summary: pd.DataFrame, n_runs: int = 5) -> pd.DataFrame:
@@ -360,6 +370,7 @@ def build_table(summary: pd.DataFrame, n_runs: int = 5) -> pd.DataFrame:
             rows.append({
                 "Generador": GENERATOR_LABELS[g],
                 "Método": METHOD_LABELS[m],
+                "Episodios / ε_min": _fmt_budget(r),
                 "Balance final (mediana)": _fmt(r["final_balance_median"], ".0f"),
                 "Log-ret. medio ± std runs": lr,
                 "Exceso vs B&H (pp, mediana)": _fmt(r["excess_return_pct_median"], ".1f"),
@@ -368,9 +379,54 @@ def build_table(summary: pd.DataFrame, n_runs: int = 5) -> pd.DataFrame:
                 "Operaciones": _fmt(r["n_trades_median"], ".0f"),
                 "% en mercado": _fmt(None if pd.isna(tm) else tm * 100, ".1f"),
                 "Conv. val (episodio)": _fmt_conv(r, n_runs),
+                "Conv. MA (episodio)": _fmt_conv(r, n_runs, "ma"),
+                "Conv. MA (s)": _fmt(r.get("conv_time_ma_mean"), ".1f"),
                 "Tiempo entren. (s)": _fmt(r.get("wall_time_mean"), ".1f"),
             })
     return pd.DataFrame(rows, columns=TABLE_COLUMNS)
+
+
+def _lr_cell(df: pd.DataFrame, generator: str, method: str) -> str:
+    """Log-retorno medio ± std entre semillas de una fila de resumen; n/c si falta."""
+    sel = df[(df["generator"] == generator) & (df["method"] == method)]
+    if sel.empty:
+        return "n/c"
+    r = sel.iloc[0]
+    out = _fmt(r["log_return_mean"], ".2f")
+    if not pd.isna(r["log_return_std_runs"]):
+        out += f" ± {r['log_return_std_runs']:.2f}"
+    return out
+
+
+def build_ext_tables(final: pd.DataFrame, ext: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    """Tablas de extensiones (strings): algoritmos y entrenamiento, y sensibilidad a tramos y comisión.
+
+    ext: resúmenes por clave 'bins5', 'bins20', 'cost0', 'cost0.005', 'mc' y 'mixed'.
+    """
+    algos = []
+    for g in GENERATORS_ORDER:
+        algos.append({
+            "Generador": GENERATOR_LABELS[g],
+            "Q-learning": _lr_cell(final, g, "qlearning"),
+            "Sarsa": _lr_cell(final, g, "sarsa"),
+            "MC on-policy": _lr_cell(ext["mc"], g, "mc"),
+            "MC off-policy": _lr_cell(ext["mc"], g, "mc_off"),
+            "Q-learning mixto": _lr_cell(ext["mixed"], g, "qlearning_mixto"),
+            "Sarsa mixto": _lr_cell(ext["mixed"], g, "sarsa_mixto"),
+            "Buy & hold": _lr_cell(final, g, "buy_and_hold"),
+        })
+    sens = []
+    for g in GENERATORS_ORDER:
+        for m in ("qlearning", "sarsa"):
+            row = {"Generador": GENERATOR_LABELS[g], "Método": METHOD_LABELS[m]}
+            for label, df in (("5", ext["bins5"]), ("10", final), ("20", ext["bins20"])):
+                row[f"{label} tramos"] = _lr_cell(df, g, m)
+            for label, df in (("0 %", ext["cost0"]), ("0,1 %", final), ("0,5 %", ext["cost0.005"])):
+                sel = df[(df["generator"] == g) & (df["method"] == m)]
+                n = "n/c" if sel.empty else _fmt(sel.iloc[0]["n_trades_median"], ".0f")
+                row[f"comisión {label}"] = f"{_lr_cell(df, g, m)} ({n})"
+            sens.append(row)
+    return {"algoritmos": pd.DataFrame(algos), "sensibilidad": pd.DataFrame(sens)}
 
 
 def table_to_markdown(table: pd.DataFrame) -> str:
@@ -392,7 +448,8 @@ def save_figure(fig: Figure, out_dir: Path, name: str) -> list[Path]:
 
 
 def make_all(results_dir: Path, out_dir: Path, n_steps: int = 500, random_seed: int = 0,
-             n_runs: int = 5) -> list[Path]:
+             n_runs: int = 5, ma_window: int = 100,
+             ma_tol_frac: float = 0.3) -> list[Path]:
     """Genera todas las figuras y la tabla desde results/final; devuelve los ficheros."""
     matplotlib.use("Agg")
     results_dir, out_dir = Path(results_dir), Path(out_dir)
@@ -407,7 +464,9 @@ def make_all(results_dir: Path, out_dir: Path, n_steps: int = 500, random_seed: 
     for name, fig in figs.items():
         written += save_figure(fig, out_dir, name)
         plt.close(fig)
-    table = build_table(pd.read_csv(results_dir / "summary.csv"), n_runs)
+    summary = add_ma_convergence(pd.read_csv(results_dir / "summary.csv"), results_dir,
+                                 ma_window, ma_tol_frac)
+    table = build_table(summary, n_runs)
     table.to_csv(out_dir / "tabla_resumen.csv", index=False)
     (out_dir / "tabla_resumen.md").write_text(table_to_markdown(table), encoding="utf-8")
     return written + [out_dir / "tabla_resumen.csv", out_dir / "tabla_resumen.md"]

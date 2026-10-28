@@ -7,7 +7,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from rl_trader.figures import make_all  # noqa: E402
+import pandas as pd  # noqa: E402
+
+from rl_trader.figures import build_ext_tables, make_all, table_to_markdown  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -21,8 +23,20 @@ def main(argv: list[str] | None = None) -> None:
                 "ejecutar antes scripts/run_experiments.py")
     cfg = json.loads(args.config.read_text(encoding="utf-8"))
     for f in make_all(args.results, args.out, n_steps=cfg["n_steps"],
-                      random_seed=cfg["random_base_seed"], n_runs=cfg["n_runs"]):
+                      random_seed=cfg["random_base_seed"], n_runs=cfg["n_runs"],
+                      ma_window=cfg["convergence"]["ma_window"],
+                      ma_tol_frac=cfg["convergence"]["ma_tol_frac"]):
         print(f)
+    ext_dir = args.results.parent / "ext"
+    keys = {"bins5": "bins5", "bins20": "bins20", "cost0": "cost0", "cost0.005": "cost0.005",
+            "mc": "mc", "mixed": "mixed"}
+    if all((ext_dir / d / "summary.csv").is_file() for d in keys.values()):
+        ext = {k: pd.read_csv(ext_dir / d / "summary.csv") for k, d in keys.items()}
+        tables = build_ext_tables(pd.read_csv(args.results / "summary.csv"), ext)
+        for name, t in tables.items():
+            t.to_csv(args.out / f"tabla_ext_{name}.csv", index=False)
+            (args.out / f"tabla_ext_{name}.md").write_text(table_to_markdown(t), encoding="utf-8")
+            print(args.out / f"tabla_ext_{name}.csv")
 
 
 if __name__ == "__main__":

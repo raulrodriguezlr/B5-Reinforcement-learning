@@ -1,0 +1,6 @@
+numpy>=1.26
+pandas>=2.2
+matplotlib>=3.9
+gymnasium>=1.2,<1.4; python_version < "3.11"
+gymnasium>=1.2; python_version >= "3.11"
+pytest>=8

@@ -1,0 +1,10 @@
+[tendencia_ciclo] mc run 0: wall 121.4s, conv_policy=None, conv_ma=3189, conv_val=None, val_final=6.5639, val_time=61.9s
+[tendencia_ciclo] mc run 1: wall 125.8s, conv_policy=None, conv_ma=5776, conv_val=None, val_final=6.5639, val_time=64.5s
+[tendencia_ciclo] mc run 2: wall 124.0s, conv_policy=None, conv_ma=5604, conv_val=None, val_final=6.3702, val_time=63.5s
+[tendencia_ciclo] mc run 3: wall 120.0s, conv_policy=None, conv_ma=4881, conv_val=None, val_final=6.1613, val_time=61.2s
+[tendencia_ciclo] mc run 4: wall 120.4s, conv_policy=5462, conv_ma=5837, conv_val=None, val_final=6.0949, val_time=62.2s
+[tendencia_ciclo] mc_off run 0: wall 120.7s, conv_policy=None, conv_ma=4856, conv_val=None, val_final=2.6084, val_time=62.1s
+[tendencia_ciclo] mc_off run 1: wall 119.5s, conv_policy=None, conv_ma=5483, conv_val=None, val_final=2.6763, val_time=61.1s
+[tendencia_ciclo] mc_off run 2: wall 118.0s, conv_policy=4848, conv_ma=5183, conv_val=4949, val_final=4.4356, val_time=59.8s
+[tendencia_ciclo] mc_off run 3: wall 121.0s, conv_policy=1935, conv_ma=3250, conv_val=1999, val_final=0.7781, val_time=61.1s
+[tendencia_ciclo] mc_off run 4: wall 116.4s, conv_policy=None, conv_ma=5886, conv_val=None, val_final=2.1907, val_time=59.9s
